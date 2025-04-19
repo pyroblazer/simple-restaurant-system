@@ -1,0 +1,51 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672       # RabbitMQ (AMQP)
+      - 15672:15672     # RabbitMQ Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  order-service:
+    build: ./order-service
+    container_name: order-service
+    ports:
+      - 3001:3001
+    env_file:
+      - ./order-service/.env
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  kitchen-service:
+    build: ./kitchen-service
+    container_name: kitchen-service
+    env_file:
+      - ./kitchen-service/.env
+    depends_on:
+      - mongodb
+      - rabbitmq
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    env_file:
+      - ./notification-service/.env
+    depends_on:
+      - rabbitmq
+
+volumes:
+  mongo-data:
+  rabbitmq-data:
